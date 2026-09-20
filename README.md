@@ -67,6 +67,8 @@ Mục tiêu không phải là học database, mà là thấy rằng database tr�
 
 Production mapping: `Map<Long, Account>` → abstraction của Oracle table `ACCOUNT`.
 
+Checkpoint implementation và giới hạn của STEP 1: [step1/README.md](dbfromsractch/src/dbformscratch/step1/README.md).
+
 ## Phase 2 — Concurrency Control
 
 ### Step 2 — Hai thread cùng UPDATE

@@ -1,4 +1,4 @@
-package dbformscratch.model;
+package dbformscratch.step1.model;
 
 public record Account(
         long id,

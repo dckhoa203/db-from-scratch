@@ -1,6 +1,6 @@
-package dbformscratch.database;
+package dbformscratch.step1.database;
 
-import dbformscratch.model.Account;
+import dbformscratch.step1.model.Account;
 
 import java.util.HashMap;
 import java.util.Map;

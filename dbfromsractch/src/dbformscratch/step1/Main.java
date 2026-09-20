@@ -1,7 +1,10 @@
-import dbformscratch.database.MiniDatabase;
-import dbformscratch.model.Account;
+package dbformscratch.step1;
+
+import dbformscratch.step1.database.MiniDatabase;
+import dbformscratch.step1.model.Account;
 
 public class Main {
+
     public static void main(String[] args) {
 
         MiniDatabase database = new MiniDatabase();
