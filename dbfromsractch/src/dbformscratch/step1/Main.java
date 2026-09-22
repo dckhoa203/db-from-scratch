@@ -17,7 +17,9 @@ public class Main {
 
         database.insert(account);
 
-        System.out.println(database.select(1L));
+        System.out.println("After INSERT");
+        System.out.println("Expected balance = 1000");
+        System.out.println("Actual balance   = " + database.select(1L).balance());
 
         Account current = database.select(1L);
 
@@ -29,10 +31,16 @@ public class Main {
 
         database.update(updated);
 
-        System.out.println(database.select(1L));
+        System.out.println();
+        System.out.println("After UPDATE");
+        System.out.println("Expected balance = 900");
+        System.out.println("Actual balance   = " + database.select(1L).balance());
 
         database.delete(1L);
 
-        System.out.println(database.select(1L));
+        System.out.println();
+        System.out.println("After DELETE");
+        System.out.println("Expected account = null");
+        System.out.println("Actual account   = " + database.select(1L));
     }
 }

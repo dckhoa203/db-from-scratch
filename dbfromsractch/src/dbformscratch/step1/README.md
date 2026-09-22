@@ -32,7 +32,7 @@ Account #2 = 500
 Account #3 = 800
 ```
 
-`ConcurrentDepositDemo` đã cung cấp bốn state transition/read cơ bản:
+`MiniDatabase` đã cung cấp bốn state transition/read cơ bản:
 
 | Operation | Code hiện tại | Kết quả |
 | --- | --- | --- |
@@ -52,6 +52,31 @@ balance mới, rồi thay value tại cùng key. Điều này giúp nhìn rõ lu
 - Minh hoạ được state thay đổi từ `balance = 1000` thành `balance = 900`.
 - Xoá account và nhận lại `null` khi đọc ID không còn tồn tại.
 - Map được mô hình `Map<Long, Account>` sang khái niệm Oracle table `ACCOUNT`.
+
+## Chạy experiment
+
+Từ repository root:
+
+```bash
+javac -d /tmp/db-from-scratch-classes $(rg --files -g '*.java')
+java -cp /tmp/db-from-scratch-classes dbformscratch.step1.Main
+```
+
+Output tự đặt expected cạnh actual để người học nhìn thấy state transition:
+
+```text
+After INSERT
+Expected balance = 1000
+Actual balance   = 1000
+
+After UPDATE
+Expected balance = 900
+Actual balance   = 900
+
+After DELETE
+Expected account = null
+Actual account   = null
+```
 
 ## Mapping sang Oracle
 
@@ -93,10 +118,13 @@ storage engine.
 Ngoài ra, `insert` và `update` hiện cùng gọi `put`. Vì vậy duplicate `insert`
 sẽ overwrite row cũ, chưa enforce primary-key constraint như Oracle.
 
-## STEP 2 sẽ giải quyết gì?
+## STEP 2 sẽ làm lộ vấn đề gì?
 
-STEP 2 tập trung vào thiếu sót đầu tiên: nhiều actor cùng modify mutable state.
-Ta thêm operation `transfer(fromId, toId, amount)`:
+STEP 2 chưa sửa thiếu sót đầu tiên; nó chủ động làm thiếu sót đó xuất hiện:
+nhiều actor cùng modify mutable state.
+Experiment chính dùng `deposit(accountId, amount)` trên một account để cô lập
+lost update. Sau đó ta dùng `transfer(fromId, toId, amount)` như một preview về
+business invariant:
 
 ```java
 public void transfer(long fromId, long toId, long amount) {
