@@ -32,7 +32,7 @@ Account #2 = 500
 Account #3 = 800
 ```
 
-`MiniDatabase` đã cung cấp bốn state transition/read cơ bản:
+`ConcurrentDepositDemo` đã cung cấp bốn state transition/read cơ bản:
 
 | Operation | Code hiện tại | Kết quả |
 | --- | --- | --- |

@@ -75,6 +75,8 @@ Checkpoint implementation và giới hạn của STEP 1: [step1/README.md](dbfro
 
 Cho 100 threads cùng `read → modify → write` lên account. Không synchronization; tổng tiền kỳ vọng 2000 nhưng kết quả có thể lệch. Ta gặp **lost update** và thấy rằng read-modify-write không atomic.
 
+Checkpoint implementation và experiment của STEP 2: [step2/README.md](dbfromsractch/src/dbformscratch/step2/README.md).
+
 ### Step 3 — Row Lock
 
 Phát minh row-level exclusive lock:
@@ -244,7 +246,7 @@ db-from-scratch/
 └── MiniDatabase.java
 ```
 
-Ở Step 1, project có thể chỉ là `MiniDatabase`, `Account` và `Main`.
+Ở Step 1, project có thể chỉ là `ConcurrentDepositDemo`, `Account` và `Main`.
 
 ## Format cố định cho mỗi step
 
