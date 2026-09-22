@@ -19,11 +19,12 @@ public class ConcurrentDepositDemo {
                 1000L
         ));
 
-        int numberOfThreads = 100;
+        int numberOfDeposits = 100;
+        int numberOfWorkers = 10;
 
-        ExecutorService executor = Executors.newFixedThreadPool(10);
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfWorkers);
 
-        for (int i = 0; i < numberOfThreads; i++) {
+        for (int i = 0; i < numberOfDeposits; i++) {
 
             executor.submit(() -> {
                 database.deposit(1L, 10L);
@@ -31,15 +32,21 @@ public class ConcurrentDepositDemo {
         }
 
         executor.shutdown();
-        executor.awaitTermination(
+        boolean completed = executor.awaitTermination(
                 10,
                 TimeUnit.SECONDS
         );
 
+        if (!completed) {
+            throw new IllegalStateException("Deposit experiment timed out");
+        }
+
         Account account = database.select(1L);
 
+        System.out.println("Deposit operations = " + numberOfDeposits);
+        System.out.println("Worker threads     = " + numberOfWorkers);
         System.out.println("Expected balance = 2000");
-
-        System.out.println("Actual balance = " + account.balance());
+        System.out.println("Actual balance   = " + account.balance());
+        System.out.println("Lost update observed = " + (account.balance() < 2000L));
     }
 }

@@ -21,7 +21,7 @@ public class LostUpdateDemo {
 
         Thread thread1 = new Thread(() -> {
 
-            database.depositUnsafe(
+            database.depositWithBarrier(
                     1L,
                     100L,
                     barrier
@@ -30,7 +30,7 @@ public class LostUpdateDemo {
 
         Thread thread2 = new Thread(() -> {
 
-            database.depositUnsafe(
+            database.depositWithBarrier(
                     1L,
                     100L,
                     barrier
@@ -48,5 +48,7 @@ public class LostUpdateDemo {
         System.out.println("Expected = 1200");
 
         System.out.println("Actual = " + account.balance());
+
+        System.out.println("Lost update reproduced = " + (account.balance() == 1100L));
     }
 }

@@ -4,6 +4,7 @@ package dbformscratch.step2.database;
 import dbformscratch.step2.model.Account;
 
 import java.util.Map;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
 
@@ -42,14 +43,17 @@ public class MiniDatabase {
         update(updated);
     }
 
-    public void depositUnsafe(long accountId, long amount, CyclicBarrier barrier) {
+    public void depositWithBarrier(long accountId, long amount, CyclicBarrier barrier) {
 
         Account current = select(accountId);
 
         try {
             barrier.await();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Deposit experiment was interrupted", e);
+        } catch (BrokenBarrierException e) {
+            throw new IllegalStateException("Deposit experiment barrier was broken", e);
         }
 
         long newBalance = current.balance() + amount;

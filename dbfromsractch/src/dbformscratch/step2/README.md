@@ -41,11 +41,11 @@ update(new Account(..., newBalance));      // WRITE
 
 | Demo | Mục đích | Kết quả mong đợi |
 | --- | --- | --- |
-| `ConcurrentDepositDemo` | Stress test 100 deposits đồng thời | Có thể ra balance nhỏ hơn `2000` |
+| `ConcurrentDepositDemo` | 100 deposits chạy trên 10 worker threads | Có thể ra balance nhỏ hơn `2000` |
 | `LostUpdateDemo` | Ép interleaving bằng `CyclicBarrier` | Luôn tái hiện `1200` expected, `1100` actual |
-| `StressTransferDemo` | Dùng invariant tổng tiền cho transfer hai chiều | Chuẩn bị cho stress test multi-row |
+| `StressTransferDemo` | Optional preview về invariant tổng tiền | Đọc final state sau khi mọi transfer hoàn tất |
 
-`depositUnsafe()` đặt barrier **sau khi đọc account**. Vì vậy cả hai thread
+`depositWithBarrier()` đặt barrier **sau khi đọc account**. Vì vậy cả hai thread
 đều phải chụp `balance = 1000` trước khi được phép tính và ghi:
 
 ```text
@@ -62,6 +62,16 @@ final: 1100
 Đây là deterministic experiment: barrier không phải lock hay solution cho
 database; nó chỉ điều khiển timeline để bug không phụ thuộc vào may mắn của
 scheduler.
+
+Trong stress test, cần phân biệt rõ:
+
+```text
+100 deposit operations
+10 worker threads
+```
+
+Một worker có thể thực thi nhiều deposit; operation count không phải thread
+count.
 
 ## Đã verify
 
@@ -83,12 +93,17 @@ Actual = 1100
 ConcurrentDepositDemo
 Expected balance = 2000
 Actual balance = 1750..1880   // thay đổi theo lần chạy
+
+StressTransferDemo
+Expected total = 2000
+Actual total = a different value
+Invariant preserved = false
 ```
 
-Stress test đôi khi có thể tình cờ ra `2000`. Điều đó không chứng minh code
-đúng; race condition phụ thuộc vào scheduling và interleaving tại thời điểm
-chạy. `LostUpdateDemo` là bằng chứng chắc chắn hơn vì nó dựng đúng execution
-gây lỗi.
+Các stress test đôi khi có thể tình cờ giữ đúng expected balance/invariant.
+Điều đó không chứng minh code đúng; race condition phụ thuộc vào scheduling và
+interleaving tại thời điểm chạy. `LostUpdateDemo` là bằng chứng chắc chắn hơn
+vì nó dựng đúng execution gây lỗi.
 
 ## Lost update là gì?
 
@@ -125,7 +140,7 @@ T2 hoàn tất rồi T1  → 1200
 Khái niệm “tương đương serial execution” này là cầu nối tới serializability ở
 những step sau.
 
-## Transfer invariant
+## Optional preview: transfer invariant
 
 Với `A = 1000` và `B = 1000`, transfer chỉ được di chuyển tiền:
 
@@ -137,25 +152,19 @@ A + B = 2000 sau transfer
 Invariant quan trọng hơn việc method không ném exception. Một backend có thể
 trả HTTP 200 nhưng vẫn sai data nếu concurrent update phá `A + B = 2000`.
 
-## Review note: StressTransferDemo
-
-Ý tưởng dùng transfer và invariant tổng tiền rất đúng, nhưng demo hiện tại đọc
-và in `A`, `B`, `Total` **ngay trong vòng lặp submit**, trước khi các task hoàn
-thành. Những con số đó là intermediate observation, không phải final result;
-ngay cả implementation đúng cũng có thể bị quan sát giữa hai update của một
-transfer.
-
-Để biến nó thành final-invariant test ở bước tiếp theo, cần:
+`StressTransferDemo` submit toàn bộ operations, đóng executor, chờ mọi task
+hoàn tất rồi mới đọc final state:
 
 ```java
-// submit all tasks
 executor.shutdown();
 executor.awaitTermination(10, TimeUnit.SECONDS);
-
-// only then select A and B once, then check A.balance() + B.balance()
+// select A and B once, then check A.balance() + B.balance()
 ```
 
-`awaitTermination` cũng giúp JVM không thoát trước khi task cuối hoàn thành.
+Transfer không phải bằng chứng chính của STEP 2 vì nó đưa thêm multi-row
+atomicity vào bài toán. Nó chỉ là preview cho business invariant và transaction
+ở các step sau; single-row deposit vẫn là experiment cô lập lost update tốt
+nhất.
 
 ## Chưa giải quyết ở STEP 2
 
