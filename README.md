@@ -73,7 +73,7 @@ Checkpoint implementation và giới hạn của STEP 1: [step1/README.md](dbfro
 
 ### Step 2 — Hai thread cùng UPDATE
 
-Cho 100 threads cùng `read → modify → write` lên account. Không synchronization; tổng tiền kỳ vọng 2000 nhưng kết quả có thể lệch. Ta gặp **lost update** và thấy rằng read-modify-write không atomic.
+Cho 100 deposit operations chạy trên 10 worker threads, cùng thực hiện `read → modify → write` lên một account. Không synchronization; balance kỳ vọng 2000 nhưng kết quả có thể thấp hơn. Ta gặp **lost update** và thấy rằng read-modify-write không atomic.
 
 Checkpoint implementation và experiment của STEP 2: [step2/README.md](dbfromsractch/src/dbformscratch/step2/README.md).
 
@@ -246,7 +246,7 @@ db-from-scratch/
 └── MiniDatabase.java
 ```
 
-Ở Step 1, project có thể chỉ là `ConcurrentDepositDemo`, `Account` và `Main`.
+Ở Step 1, project có thể chỉ là `MiniDatabase`, `Account` và `Main`.
 
 ## Format cố định cho mỗi step
 
@@ -292,4 +292,4 @@ Với background backend/banking, đây là nơi bóc những vấn đề đã g
 
 ## Next step
 
-**DB-FROM-SCRATCH — Step 1:** Build một database ngu ngốc bằng Java, bắt đầu với `Map<Long, Row>`, `insert/select/update/delete`, invariant tổng tiền và test harness để chuẩn bị cho Step 2—nơi 100 threads sẽ phá nó.
+STEP 1 và STEP 2 đã hoàn thành: từ `Map<Long, Account>` đến deterministic lost update. Tiếp theo là **STEP 3 — Row Lock**, nơi ta thêm coordination đầu tiên và đo cái giá của waiting, blocking và contention.
