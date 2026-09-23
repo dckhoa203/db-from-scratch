@@ -92,9 +92,11 @@ try {
 }
 ```
 
-Từ đó xuất hiện blocking, waiting, contention và hot row. Experiment: 100 threads cùng một account → 1 row lock → 99 waiters.
+Từ đó xuất hiện blocking, waiting, contention và hot row. Experiment đối chiếu global lock với row lock trên cùng row và khác row để nhìn thấy correctness lẫn concurrency.
 
 Production mapping: bank account, wallet balance, inventory, counter và sequence-like hot data.
+
+Checkpoint implementation và lock-granularity experiments của STEP 3: [step3/README.md](dbfromsractch/src/dbformscratch/step3/README.md).
 
 ## Phase 3 — Transaction & Isolation
 
@@ -246,7 +248,7 @@ db-from-scratch/
 └── MiniDatabase.java
 ```
 
-Ở Step 1, project có thể chỉ là `MiniDatabase`, `Account` và `Main`.
+Ở Step 1, project có thể chỉ là `MiniDatabase`, `Account` và `RowLockDemo`.
 
 ## Format cố định cho mỗi step
 
@@ -292,4 +294,4 @@ Với background backend/banking, đây là nơi bóc những vấn đề đã g
 
 ## Next step
 
-STEP 1 và STEP 2 đã hoàn thành: từ `Map<Long, Account>` đến deterministic lost update. Tiếp theo là **STEP 3 — Row Lock**, nơi ta thêm coordination đầu tiên và đo cái giá của waiting, blocking và contention.
+STEP 1–3 đã hoàn thành: từ mutable state, deterministic lost update đến global lock và row lock. Tiếp theo là **STEP 4 — Multi-row Transaction**, nơi ta cố tình crash giữa `A -= 100` và `B += 100` để phát minh all-or-nothing, commit và rollback.
