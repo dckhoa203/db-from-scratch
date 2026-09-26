@@ -102,9 +102,11 @@ Checkpoint implementation và lock-granularity experiments của STEP 3: [step3/
 
 ### Step 4 — Multi-row Transaction
 
-Transfer gồm `A -= 100` và `B += 100`. Nếu crash giữa hai update, tiền biến mất. Vì vậy xuất hiện `BEGIN`, `COMMIT`, `ROLLBACK`, `TransactionContext`, `WriteSet` và `BeforeImage`.
+Transfer gồm `A -= 100` và `B += 100`. Nếu operation fail giữa hai update, tiền có thể biến mất. Vì vậy xuất hiện `BEGIN`, `COMMIT`, `ROLLBACK`, `TransactionContext`, `WriteSet` và `BeforeImage`.
 
 Transaction không chỉ là JDBC API; nó là một đơn vị thay đổi state phải xuất hiện all-or-nothing. Đây là lúc Atomicity có nghĩa thật.
+
+Checkpoint implementation, transaction trace và failure demo của STEP 4: [step4/README.md](dbfromsractch/src/dbformscratch/step4/README.md).
 
 ### Step 5 — Isolation Problems
 
@@ -294,4 +296,4 @@ Với background backend/banking, đây là nơi bóc những vấn đề đã g
 
 ## Next step
 
-STEP 1–3 đã hoàn thành: từ mutable state, deterministic lost update đến global lock và row lock. Tiếp theo là **STEP 4 — Multi-row Transaction**, nơi ta cố tình crash giữa `A -= 100` và `B += 100` để phát minh all-or-nothing, commit và rollback.
+STEP 1–4 đã hoàn thành: từ mutable state và row lock đến atomic multi-row transaction. Tiếp theo là **STEP 5 — Isolation Problems**, nơi một transaction chưa commit để lộ state cho transaction khác và ta tự reproduce dirty read, non-repeatable read và phantom read.
