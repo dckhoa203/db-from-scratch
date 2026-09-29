@@ -112,6 +112,8 @@ Checkpoint implementation, transaction trace và failure demo của STEP 4: [ste
 
 Tự reproduce dirty read, non-repeatable read, phantom read và lost update trước khi nói về `READ COMMITTED`, `REPEATABLE READ`, `SERIALIZABLE`.
 
+Checkpoint timelines và anomaly demos của STEP 5: [step5/README.md](dbfromsractch/src/dbformscratch/step5/README.md).
+
 ### Step 6 — Two-Phase Locking
 
 ```text
@@ -296,4 +298,4 @@ Với background backend/banking, đây là nơi bóc những vấn đề đã g
 
 ## Next step
 
-STEP 1–4 đã hoàn thành: từ mutable state và row lock đến atomic multi-row transaction. Tiếp theo là **STEP 5 — Isolation Problems**, nơi một transaction chưa commit để lộ state cho transaction khác và ta tự reproduce dirty read, non-repeatable read và phantom read.
+STEP 1–5 đã hoàn thành: từ mutable state và row lock đến atomicity và isolation anomalies. Tiếp theo là **STEP 6 — Two-Phase Locking**, nơi transaction lấy shared/exclusive lock, giữ chúng tới commit hoặc rollback, rồi giải quyết dirty read và rollback overwrite bằng lock lifetime.
