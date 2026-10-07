@@ -19,14 +19,16 @@ public class TransactionManager {
     }
 
     public TransactionContext begin() {
-        return new TransactionContext(transactionIdGenerator
-                .incrementAndGet());
+        TransactionContext transaction = new TransactionContext(transactionIdGenerator.incrementAndGet());
+        database.getTrace().event(transaction.getTransactionId(), "BEGIN");
+        return transaction;
     }
 
     public void commit(TransactionContext transaction) {
 
         transaction.ensureActive();
 
+        database.getTrace().event(transaction.getTransactionId(), "COMMIT");
         transaction.markCommitted();
 
         lockManager.releaseAll(transaction);
@@ -38,9 +40,11 @@ public class TransactionManager {
 
         try {
 
+            database.getTrace().event(transaction.getTransactionId(), "ROLLBACK");
+
             database.restore(transaction);
 
-            transaction.markRollBack();
+            transaction.markRolledBack();
 
         } finally {
 

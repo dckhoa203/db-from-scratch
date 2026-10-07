@@ -114,7 +114,7 @@ Tự reproduce dirty read, non-repeatable read, phantom read và lost update tr�
 
 Checkpoint timelines và anomaly demos của STEP 5: [step5/README.md](dbfromsractch/src/dbformscratch/step5/README.md).
 
-### Step 6 — Two-Phase Locking
+### Step 6 — Strict Two-Phase Locking
 
 ```text
 transaction
@@ -123,7 +123,14 @@ transaction
     └── release at commit
 ```
 
-Tìm hiểu lock lifecycle, shared/exclusive lock, lock upgrade và compatibility. Trade-off: correctness tăng, concurrency giảm.
+Từ lock sống theo method ở STEP 3 sang lock sống theo transaction: `SELECT`
+lấy shared lock, `UPDATE` lấy exclusive lock, và mọi lock chỉ được release tại
+`COMMIT` hoặc `ROLLBACK`. Demos cho thấy shared readers, reader/writer
+blocking, writer contention, rollback release và lock upgrade bằng timeline
+thật giữa các Java threads.
+
+Checkpoint implementation, two-phase-locking timelines và experiments của STEP 6:
+[step6/README.md](dbfromsractch/src/dbformscratch/step6/README.md).
 
 ### Step 7 — MVCC
 
@@ -298,4 +305,6 @@ Với background backend/banking, đây là nơi bóc những vấn đề đã g
 
 ## Next step
 
-STEP 1–5 đã hoàn thành: từ mutable state và row lock đến atomicity và isolation anomalies. Tiếp theo là **STEP 6 — Two-Phase Locking**, nơi transaction lấy shared/exclusive lock, giữ chúng tới commit hoặc rollback, rồi giải quyết dirty read và rollback overwrite bằng lock lifetime.
+STEP 1–6 đã hoàn thành: từ mutable state và row lock đến atomicity, isolation
+anomalies và strict two-phase locking. Tiếp theo là **STEP 7 — MVCC**, nơi
+reader không còn luôn phải chờ writer nhờ version và snapshot visibility.

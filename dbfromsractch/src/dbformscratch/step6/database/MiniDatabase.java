@@ -3,6 +3,7 @@ package dbformscratch.step6.database;
 import dbformscratch.step6.transaction.TransactionContext;
 import dbformscratch.step6.model.Account;
 import dbformscratch.step6.lock.LockManager;
+import dbformscratch.step6.trace.TransactionTrace;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,7 +12,14 @@ public class MiniDatabase {
 
     private final Map<Long, Account> accounts = new ConcurrentHashMap<>();
 
-    private final LockManager lockManager = new LockManager();
+    private final TransactionTrace trace;
+
+    private final LockManager lockManager;
+
+    public MiniDatabase(TransactionTrace trace) {
+        this.trace = trace;
+        this.lockManager = new LockManager(trace);
+    }
 
     public void insert(Account account) {
         accounts.put(account.id(), account);
@@ -23,7 +31,9 @@ public class MiniDatabase {
 
         lockManager.acquireShared(transaction, id);
 
-        return accounts.get(id);
+        Account account = accounts.get(id);
+        trace.event(transaction.getTransactionId(), "READ A" + id + " = " + account.balance());
+        return account;
     }
 
     public void update(TransactionContext transaction, Account account) {
@@ -41,13 +51,22 @@ public class MiniDatabase {
         transaction.recordWrite(rowId);
 
         accounts.put(rowId, account);
+        trace.event(transaction.getTransactionId(), "UPDATE A" + rowId + ": "
+                + current.balance() + " → " + account.balance());
     }
 
     public void restore(TransactionContext transaction) {
-        accounts.putAll(transaction.getBeforeImages());
+        transaction.getBeforeImages().forEach((rowId, account) -> {
+            accounts.put(rowId, account);
+            trace.event(transaction.getTransactionId(), "RESTORE A" + rowId + " = " + account.balance());
+        });
     }
 
     public LockManager getLockManager() {
         return lockManager;
+    }
+
+    public TransactionTrace getTrace() {
+        return trace;
     }
 }

@@ -18,7 +18,7 @@ public class TransactionContext {
 
     private final Set<Long> writeSet = new LinkedHashSet<>();
 
-    private final Map<Long, LockMode> helpLocks = new LinkedHashMap<>();
+    private final Map<Long, LockMode> heldLocks = new LinkedHashMap<>();
 
     public TransactionContext(long transactionId) {
         this.transactionId = transactionId;
@@ -53,7 +53,7 @@ public class TransactionContext {
         this.state = TransactionState.COMMITTED;
     }
 
-    public void markRollBack() {
+    public void markRolledBack() {
         this.state = TransactionState.ROLLED_BACK;
     }
 
@@ -63,18 +63,22 @@ public class TransactionContext {
         }
     }
 
-    public Map<Long, LockMode> getHelpLocks() {
-        return helpLocks;
+    public Map<Long, LockMode> getHeldLocks() {
+        return heldLocks;
     }
 
     public void recordLock(long rowId, LockMode mode) {
 
-        LockMode current = helpLocks.get(rowId);
+        LockMode current = heldLocks.get(rowId);
 
         if (current == LockMode.EXCLUSIVE) {
             return;
         }
 
-        helpLocks.put(rowId, mode);
+        heldLocks.put(rowId, mode);
+    }
+
+    public void clearHeldLocks() {
+        heldLocks.clear();
     }
 }
