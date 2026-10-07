@@ -132,6 +132,114 @@ Nó đánh số event phát sinh từ transaction manager và lock manager, nên
 cho thấy request, wait, grant, read/write, commit/rollback và release theo đúng
 thứ tự thực tế giữa các Java threads.
 
+## UML class diagram
+
+Sơ đồ dưới đây tách rõ ba nhóm trách nhiệm: `MiniDatabase` quản lý state và
+route operation sang lock manager; `TransactionManager` quản lý lifecycle;
+`RowLock` quyết định compatibility và waiting của từng row.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class MiniDatabase {
+        -Map accounts
+        -LockManager lockManager
+        -TransactionTrace trace
+        +insert(Account)
+        +select(TransactionContext, id) Account
+        +update(TransactionContext, Account)
+        +restore(TransactionContext)
+    }
+
+    class TransactionManager {
+        -MiniDatabase database
+        -LockManager lockManager
+        +begin() TransactionContext
+        +commit(TransactionContext)
+        +rollback(TransactionContext)
+    }
+
+    class TransactionContext {
+        -long transactionId
+        -TransactionState state
+        -Map beforeImages
+        -Set writeSet
+        -Map heldLocks
+        +recordLock(rowId, LockMode)
+        +ensureActive()
+    }
+
+    class LockManager {
+        -Map locks
+        -TransactionTrace trace
+        +acquireShared(TransactionContext, rowId)
+        +acquireExclusive(TransactionContext, rowId)
+        +releaseAll(TransactionContext)
+    }
+
+    class RowLock {
+        -Set sharedHolders
+        -Long exclusiveHolder
+        +acquireShared(transactionId)
+        +acquireExclusive(transactionId)
+        +release(transactionId)
+    }
+
+    class TransactionTrace {
+        +event(transactionId, message)
+        +system(message)
+    }
+
+    class Account {
+        +long id
+        +String accountNumber
+        +long balance
+    }
+
+    class LockMode {
+        <<enumeration>>
+        SHARED
+        EXCLUSIVE
+    }
+
+    class TransactionState {
+        <<enumeration>>
+        ACTIVE
+        COMMITTED
+        ROLLED_BACK
+    }
+
+    MiniDatabase "1" *-- "1" LockManager : owns
+    MiniDatabase "1" *-- "1" TransactionTrace : owns
+    MiniDatabase "1" o-- "0..*" Account : accounts
+    MiniDatabase ..> TransactionContext : select/update
+
+    TransactionManager --> MiniDatabase : drives
+    TransactionManager --> LockManager : releases locks
+    TransactionManager ..> TransactionContext : creates / finishes
+
+    TransactionContext *-- TransactionState : state
+    TransactionContext o-- "0..*" Account : before images
+    TransactionContext --> "0..*" LockMode : held locks
+
+    LockManager "1" *-- "0..*" RowLock : one per row id
+    LockManager --> TransactionTrace : emits
+    LockManager ..> TransactionContext : reads / records
+    RowLock --> TransactionTrace : wait / grant events
+```
+
+Điểm cần đọc theo mũi tên:
+
+```text
+UPDATE(tx, account)
+  MiniDatabase -> LockManager -> RowLock
+  TransactionContext <- LockManager records X(account.id)
+
+COMMIT(tx) / ROLLBACK(tx)
+  TransactionManager -> LockManager -> every RowLock held by tx
+```
+
 ## Các demo
 
 Mọi demo dùng `CountDownLatch`, không dùng `Thread.sleep()`. Timeline vì thế
